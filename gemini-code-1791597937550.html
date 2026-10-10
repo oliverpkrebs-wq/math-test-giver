@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Test Center</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#eaf2ff,#f8fbff);color:#172033}
+.app{max-width:900px;margin:0 auto;padding:24px}.card{background:white;border-radius:20px;padding:28px;box-shadow:0 10px 35px #0001;margin:20px 0}
+h1,h2{margin-top:0}.center{text-align:center}.hidden{display:none!important}
+input,select{width:100%;padding:14px;border:2px solid #d9e0eb;border-radius:10px;font-size:16px;margin:7px 0 14px}
+button{border:0;border-radius:10px;padding:12px 18px;font-size:16px;font-weight:700;cursor:pointer;background:#2563eb;color:white;margin:5px}
+button.secondary{background:#64748b}.danger{color:#b91c1c}.error{color:#b91c1c;font-weight:700}.success{color:#15803d;font-weight:700}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;position:relative}
+.timer{font-size:22px;font-weight:800;background:#eef2ff;padding:8px 14px;border-radius:12px;color:#1e40af}.warning{background:#fee2e2;color:#b91c1c;animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.05)}}
+.progress{height:12px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin:14px 0}.bar{height:100%;width:0;background:#2563eb;transition:.2s}
+.question{font-size:24px;font-weight:700;margin:25px 0}.hint{color:#64748b}
+.results{font-size:22px;line-height:1.6}.small{font-size:13px;color:#64748b}
+.badge{display:inline-block;padding:5px 9px;border-radius:99px;background:#dbeafe;color:#1d4ed8;font-weight:700;margin-right:6px}
+.role-badge{background:#fef3c7;color:#b45309}
+.action-group{display:flex;gap:10px;flex-wrap:wrap}
+.assigned-box{background:#eff6ff;border:2px dashed #3b82f6;border-radius:12px;padding:16px;margin:16px 0}
+.assign-card{background:#f8fafc;border:2px solid #e2e8f0;border-radius:12px;padding:16px;margin:16px 0}
+
+/* Header & Dropdown Menu */
+.header-actions{position:relative}
+.menu-btn{background:transparent;color:#172033;font-size:28px;padding:4px 10px;margin:0;border-radius:8px;line-height:1}
+.menu-btn:hover{background:#e2e8f0}
+.dropdown-menu{position:absolute;right:0;top:45px;background:white;border:1px solid #cbd5e1;box-shadow:0 10px 25px #0002;border-radius:12px;width:240px;padding:12px;z-index:100}
+.dropdown-menu p{margin:0 0 8px;padding:6px 8px;font-size:14px;color:#475569;border-bottom:1px solid #f1f5f9;word-break:break-all}
+.dropdown-menu button{display:block;width:100%;margin:4px 0;text-align:left;font-size:14px;padding:10px;border-radius:8px}
+
+.forgot-btn{background:none;border:none;color:#2563eb;padding:0;margin:4px 0 14px;font-size:14px;font-weight:600;text-decoration:underline;cursor:pointer;display:block}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Authentication Screen -->
+<section id="auth" class="card">
+  <div class="center">
+    <h1>📚 Math Test Center</h1>
+    <p>Create an account or sign in to keep your scores.</p>
+  </div>
+  <div id="authForms">
+    <h2 id="authTitle">Create Account</h2>
+    <div id="roleWrap">
+      <label for="role">Account Type</label>
+      <select id="role">
+        <option value="student">Student</option>
+        <option value="teacher">Teacher</option>
+      </select>
+    </div>
+    <label>Email</label>
+    <input id="email" type="email" placeholder="you@example.com">
+    <label>Password</label>
+    <div style="position:relative">
+      <input id="password" type="password" placeholder="Choose your password" style="padding-right:50px">
+      <button type="button" class="secondary" id="togglePassword" aria-label="Show password" style="position:absolute;right:5px;top:5px;margin:0;padding:8px 10px">👁️</button>
+    </div>
+    <div id="confirmWrap">
+      <label>Confirm Password</label>
+      <div style="position:relative">
+        <input id="confirmPassword" type="password" placeholder="Type your password again" style="padding-right:50px">
+        <button type="button" class="secondary" id="toggleConfirm" aria-label="Show confirmation password" style="position:absolute;right:5px;top:5px;margin:0;padding:8px 10px">👁️</button>
+      </div>
+    </div>
+    <button type="button" class="forgot-btn hidden" id="forgotBtn">Forgot Password?</button>
+    <button id="authBtn">Create Account</button>
+    <button type="button" class="secondary" id="switchAuth">I already have an account</button>
+    <p id="authMsg"></p>
+    <p class="small">Demo account storage uses local browser storage. Do not use real sensitive passwords.</p>
+  </div>
+</section>
+
+<!-- Main Dashboard Screen -->
+<section id="home" class="card hidden">
+  <div class="topbar">
+    <div><h1>Welcome! 👋</h1><p id="who"></p></div>
+    <div class="header-actions">
+      <button class="menu-btn" id="menuToggle" aria-label="Open menu">☰</button>
+      <div class="dropdown-menu hidden" id="dropdownMenu">
+        <p id="menuAccountEmail"></p>
+        <button class="secondary" id="switchRoleBtn"></button>
+        <button class="danger" id="logout">Log Out</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="assignedContainer" class="assigned-box hidden">
+    <h3 style="margin-top:0">📌 Assigned Test Waiting</h3>
+    <p id="assignedNotice"></p>
+    <button id="startAssigned">Start Assigned Test 🔒</button>
+  </div>
+
+  <h2>Choose any grade or math level</h2>
+  <p>From early counting through college math. Every test has 30 regular questions, 2 bonus questions, and a 2-minute timer per question.</p>
+  <label for="levelSelect">Grade or level</label>
+  <select id="levelSelect">
+    <optgroup label="Early Math"><option>Pre-K Math</option><option>Kindergarten Math</option><option>1st Grade Math</option><option>2nd Grade Math</option><option>3rd Grade Math</option><option>4th Grade Math</option><option>5th Grade Math</option></optgroup>
+    <optgroup label="Middle School"><option>6th Grade Math</option><option>7th Grade Math</option><option>8th Grade Math</option><option>Arithmetic</option><option>Pre-Algebra</option></optgroup>
+    <optgroup label="High School"><option>Algebra I</option><option>Geometry</option><option>Algebra II</option><option>Trigonometry</option><option>Precalculus</option><option>9th Grade Math</option><option>10th Grade Math</option><option>11th Grade Math</option><option>12th Grade Math</option></optgroup>
+    <optgroup label="College & Advanced Math"><option>Calculus I</option><option>Statistics</option><option>Linear Algebra</option></optgroup>
+  </select>
+
+  <div id="assignSection" class="assign-card hidden">
+    <h3 style="margin-top:0">📝 Assign Test to Student</h3>
+    <label for="assignEmailInput">Student's Email Address:</label>
+    <input id="assignEmailInput" type="email" placeholder="student@example.com">
+    <button id="confirmAssignBtn">Send Assignment</button>
+    <button id="cancelAssignBtn" class="secondary">Cancel</button>
+    <p id="assignStatusMsg"></p>
+  </div>
+
+  <div class="action-group">
+    <button id="startSelected">Take Practice Test →</button>
+    <button id="assignTest" class="secondary hidden">Assign Test to Student 📝</button>
+  </div>
+  <div id="history"></div>
+</section>
+
+<!-- Active Test Screen -->
+<section id="test" class="card hidden">
+  <div class="topbar">
+    <div><span class="badge" id="testName"></span><div class="small" id="qCount"></div></div>
+    <div class="timer" id="timer">⏱️ 2:00</div>
+  </div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <div id="question"></div>
+  <input id="answer" autocomplete="off" placeholder="Type your answer here">
+  <p class="hint" id="hintText"></p>
+  <button id="next">Next Question →</button>
+  <button class="secondary" id="quit">Quit Test</button>
+</section>
+
+<!-- Results Screen -->
+<section id="results" class="card hidden">
+  <div class="center"><h1>🎉 Test Complete!</h1></div>
+  <div class="results" id="resultText"></div>
+  <button onclick="goHome()">Back to Test Center</button>
+</section>
+
+</div>
+
+<script>
+const q = (text, answer) => [text, String(answer)];
+
+function makeQuestions(level) {
+  const out = [];
+  const add = (text, ans) => out.push(q(text, ans));
+  for (let i = 0; i < 32; i++) {
+    const a = 2 + (i * 3) % 17, b = 1 + (i * 5) % 12, c = 2 + (i * 2) % 9;
+    if (level === "Pre-K Math") {
+      const k = i % 8;
+      if (k === 0) add(`Count these: ${'● '.repeat(1 + i % 5).trim()}. How many?`, 1 + i % 5);
+      if (k === 1) add(`What number comes after ${i % 9}?`, i % 9 + 1);
+      if (k === 2) add(`Which is bigger: ${a % 6 + 1} or ${b % 6 + 1}?`, Math.max(a % 6 + 1, b % 6 + 1));
+      if (k === 3) add(`What is ${i % 4 + 1} + ${i % 3 + 1}?`, i % 4 + 1 + i % 3 + 1);
+      if (k === 4) add(`What is ${i % 5 + 2} − 1?`, i % 5 + 1);
+      if (k === 5) add(`How many sides does a triangle have?`, 3);
+      if (k === 6) add(`What number comes before ${i % 8 + 2}?`, i % 8 + 1);
+      if (k === 7) add(`How many corners does a square have?`, 4);
+    } else if (level === "Kindergarten Math" || level === "1st Grade Math") {
+      const k = i % 8;
+      if (k === 0) add(`What is ${a} + ${b}?`, a + b);
+      if (k === 1) add(`What is ${a + b} − ${b}?`, a);
+      if (k === 2) add(`What number comes after ${20 + i}?`, 21 + i);
+      if (k === 3) add(`What is ${i % 5 + 1} more than ${10 + i}?`, 11 + i + i % 5);
+      if (k === 4) add(`How many sides does a hexagon have?`, 6);
+      if (k === 5) add(`Which is greater: ${a} or ${b}?`, Math.max(a, b));
+      if (k === 6) add(`What is ${i % 10} + 10?`, i % 10 + 10);
+      if (k === 7) add(`There are ${a} apples and ${b} more. How many apples?`, a + b);
+    } else if (level === "2nd Grade Math") {
+      const k = i % 8;
+      if (k === 0) add(`What is ${20 + a} + ${10 + b}?`, 30 + a + b);
+      if (k === 1) add(`What is ${50 + a} − ${b}?`, 50 + a - b);
+      if (k === 2) add(`What is ${i % 5 + 2} × 2?`, (i % 5 + 2) * 2);
+      if (k === 3) add(`How many minutes are in ${i % 3 + 1} hours?`, (i % 3 + 1) * 60);
+      if (k === 4) add(`What is the value of the 5 in ${500 + (i % 10) * 7}?`, 500);
+      if (k === 5) add(`What is ${a} + ${a}?`, 2 * a);
+      if (k === 6) add(`A toy costs $${i % 8 + 2}. You pay $${i % 8 + 5}. How much change?`, 3);
+      if (k === 7) add(`How many sides do 2 triangles have altogether?`, 6);
+    } else if (["3rd Grade Math", "4th Grade Math", "5th Grade Math"].includes(level)) {
+      const k = i % 10;
+      if (k === 0) add(`What is ${a} × ${b}?`, a * b);
+      if (k === 1) add(`What is ${(a * b)} ÷ ${a}?`, b);
+      if (k === 2) add(`What is ${100 + a * 11} + ${b * 17}?`, 100 + a * 11 + b * 17);
+      if (k === 3) add(`What is ${a * 10} − ${b * 3}?`, a * 10 - b * 3);
+      if (k === 4) add(`What is the area of a rectangle ${a} cm by ${b} cm?`, a * b);
+      if (k === 5) add(`What is the perimeter of a square with side ${a}?`, 4 * a);
+      if (k === 6) add(`What is ${i % 8 + 1}/${i % 8 + 1} as a simplified fraction?`, "1");
+      if (k === 7) add(`What is ${a}/10 as a decimal?`, (a / 10).toFixed(1));
+      if (k === 8) add(`What is ${a * a}?`, a * a);
+      if (k === 9) add(`Round ${1234 + i * 37} to the nearest hundred.`, Math.round((1234 + i * 37) / 100) * 100);
+    } else {
+      const k = i % 8;
+      if (k === 0) add(`What is ${a} + ${b}?`, a + b);
+      if (k === 1) add(`What is ${a * b} ÷ ${a}?`, b);
+      if (k === 2) add(`Solve for x: x + ${a} = ${a + b}.`, b);
+      if (k === 3) add(`What is ${a}²?`, a * a);
+      if (k === 4) add(`What is ${a} × ${b}?`, a * b);
+      if (k === 5) add(`What is ${a + b} − ${b}?`, a);
+      if (k === 6) add(`What is the mean of ${a}, ${b}, and ${c}?`, (a + b + c) / 3);
+      if (k === 7) add(`What is the perimeter of a square with side ${a}?`, 4 * a);
+    }
+  }
+  const bonusByLevel = {
+    "Pre-K Math": [q("BONUS: What number comes after 9?", 10), q("BONUS: How many sides does a square have?", 4)],
+    "Kindergarten Math": [q("BONUS: What is 8 + 7?", 15), q("BONUS: What is 10 − 4?", 6)]
+  };
+  return out.slice(0, 30).concat(bonusByLevel[level] || [q("BONUS: What is 15% of 200?", 30), q("BONUS: A rectangle has area 48 and width 6. Find its length.", 8)]);
+}
+
+let activeQuestions = [];
+let currentUser = null, mode = "signup", currentTest = null, index = 0, answers = [], correct = 0, bonusCorrect = 0, timeLeft = 120, timerId = null;
+
+const $ = id => document.getElementById(id);
+function show(id) { ["auth", "home", "test", "results"].forEach(x => $(x).classList.toggle("hidden", x !== id)); }
+function getUsers() { return JSON.parse(localStorage.getItem("mathUsers") || "{}"); }
+function saveUsers(u) { localStorage.setItem("mathUsers", JSON.stringify(u)); }
+
+function key(v) { return String(v).trim().toLowerCase().replace(/°/g, "").replace(/π/g, "pi").replace(/[−–]/g, "-").replace(/\s+/g, ""); }
+function same(a, b) {
+  a = key(a); b = key(b);
+  if (a === b) return true;
+  const map = { "one": "1", "two": "2", "three": "3", "four": "4", "five": "5" };
+  return map[a] === b || map[b] === a;
+}
+
+function toggleField(id, btnId) {
+  const input = $(id), btn =$(btnId);
+  const visible = input.type === "text";
+  input.type = visible ? "password" : "text";
+  btn.textContent = visible ? "👁️" : "🙈";
+}
+$("togglePassword").onclick = () => toggleField("password", "togglePassword");
+$("toggleConfirm").onclick = () => toggleField("confirmPassword", "toggleConfirm");
+
+// Auth handlers
+$("authBtn").onclick = () => {
+  const email = $("email").value.trim().toLowerCase(), pass = $("password").value;
+  const confirm = $("confirmPassword").value, role = $("role").value;
+  $("authMsg").className = "error";
+
+  if (!email || !email.includes("@")) { $("authMsg").textContent = "Enter a valid email address."; return; }
+  if (pass.length < 4) { $("authMsg").textContent = "Your password must be at least 4 characters."; return; }
+
+  const users = getUsers();
+  if (mode === "signup") {
+    if (pass !== confirm) { $("authMsg").textContent = "The passwords do not match."; return; }
+    if (users[email]) { $("authMsg").textContent = "That account already exists."; return; }
+    users[email] = { password: pass, role: role, scores: [], assignedTest: null };
+    saveUsers(users); currentUser = email; showHome();
+  } else {
+    if (!users[email]) { $("authMsg").textContent = "No account found for that email. Choose Create Account to register."; return; }
+    if (users[email].password !== pass) { $("authMsg").textContent = "Password is incorrect."; return; }
+    currentUser = email; showHome();
+  }
+};
+
+$("switchAuth").onclick = () => {
+  mode = mode === "signup" ? "login" : "signup";
+  $("authTitle").textContent = mode === "signup" ? "Create Account" : "Sign In";
+  $("authBtn").textContent = mode === "signup" ? "Create Account" : "Sign In";
+  $("switchAuth").textContent = mode === "signup" ? "I already have an account" : "Create a new account";
+  $("confirmWrap").classList.toggle("hidden", mode !== "signup");
+  $("roleWrap").classList.toggle("hidden", mode !== "signup");
+  $("forgotBtn").classList.toggle("hidden", mode !== "login");
+  $("authMsg").textContent = "";
+};
+
+$("logout").onclick = () => {
+  currentUser = null;
+  $("dropdownMenu").classList.add("hidden");
+  show("auth");
+};
+
+$("forgotBtn").onclick = () => {
+  const emailPrompt = prompt("Enter your account email address:");
+  if (!emailPrompt) return;
+  const emailClean = emailPrompt.trim().toLowerCase();
+  const users = getUsers();
+  if (!users[emailClean]) { alert("No account found with that email address."); return; }
+  alert(`An email link has been sent to ${emailClean}.`);
+  const newPass = prompt("📧 [Reset Link Triggered]\n\nPlease enter your new password (min 4 characters):");
+  if (!newPass || newPass.length < 4) { alert("Reset cancelled. Password must be 4+ characters."); return; }
+  users[emailClean].password = newPass;
+  saveUsers(users);
+  alert("Password successfully updated! You can now sign in.");
+};
+
+// Dropdown Navigation
+$("menuToggle").onclick = (e) => { e.stopPropagation(); $("dropdownMenu").classList.toggle("hidden"); };
+document.addEventListener("click", (e) => {
+  if (!$("dropdownMenu").contains(e.target) && e.target !== $("menuToggle")) {
+    $("dropdownMenu").classList.add("hidden");
+  }
+});
+
+$("switchRoleBtn").onclick = () => {
+  const users = getUsers(), user = users[currentUser];
+  if (!user) return;
+  if (user.role === 'student') {
+    const monitorPass = prompt("Switching to Teacher Account.\nEnter monitor password:");
+    if (monitorPass !== "admin") { alert("Incorrect monitor password."); return; }
+  }
+  user.role = user.role === 'teacher' ? 'student' : 'teacher';
+  saveUsers(users);
+  $("dropdownMenu").classList.add("hidden");
+  showHome();
+};
+
+function showHome() {
+  const user = getUsers()[currentUser] || { role: 'student', scores: [], assignedTest: null };
+  const roleTitle = user.role === 'teacher' ? '🍎 Teacher' : '🎓 Student';
+  $("who").innerHTML = `Signed in as <b>${currentUser}</b> <span class="badge role-badge">${roleTitle}</span>`;
+  $("menuAccountEmail").innerHTML = `Account:<br><b>${currentUser}</b>`;
+  $("switchRoleBtn").textContent = user.role === 'teacher' ? 'Switch to Student Account' : 'Switch to Teacher Account';
+  $("assignTest").classList.toggle("hidden", user.role !== 'teacher');
+  $("assignSection").classList.add("hidden");
+
+  if (user.assignedTest && user.role === 'student') {
+    $("assignedNotice").innerHTML = `Your teacher assigned you <b>${user.assignedTest}</b>.`;
+    $("assignedContainer").classList.remove("hidden");
+  } else {
+    $("assignedContainer").classList.add("hidden");
+  }
+
+  const s = user.scores || [];
+  $("history").innerHTML = s.length ? ("<h3>Previous Scores</h3>" + s.slice(-6).reverse().map(x => `<p>${x.test}: <b>${x.percent}%</b> — ${x.date}</p>`).join("")) : "<p>No scores yet.</p>";
+  show("home");
+}
+
+// Assignment handling
+$("assignTest").onclick = () => {
+  $("assignSection").classList.remove("hidden");
+  $("assignStatusMsg").textContent = "";
+  $("assignEmailInput").value = "";
+  $("assignEmailInput").focus();
+};
+
+$("cancelAssignBtn").onclick = () => $("assignSection").classList.add("hidden");
+
+$("confirmAssignBtn").onclick = () => {
+  const selectedLevel = $("levelSelect").value;
+  const studentEmail = $("assignEmailInput").value.trim().toLowerCase();
+  $("assignStatusMsg").className = "error";
+
+  if (!studentEmail || !studentEmail.includes("@")) {
+    $("assignStatusMsg").textContent = "Please enter a valid student email address.";
+    return;
+  }
+
+  const users = getUsers();
+  if (!users[studentEmail]) {
+    // Automatically provision account if missing
+    users[studentEmail] = { password: "password123", role: "student", scores: [], assignedTest: selectedLevel };
+    saveUsers(users);
+    $("assignStatusMsg").className = "success";
+    $("assignStatusMsg").textContent = `Created account for ${studentEmail} & assigned "${selectedLevel}"! (Pass: password123)`;
+  } else {
+    users[studentEmail].assignedTest = selectedLevel;
+    saveUsers(users);
+    $("assignStatusMsg").className = "success";
+    $("assignStatusMsg").textContent = `Successfully assigned "${selectedLevel}" to ${studentEmail}!`;
+  }
+  setTimeout(() => { $("assignSection").classList.add("hidden"); }, 2500);
+};
+
+// Test Execution
+function startTest(type) {
+  currentTest = type; activeQuestions = makeQuestions(type); index = 0; answers = []; correct = 0; bonusCorrect = 0;
+  $("testName").textContent = "🧮 " + type;
+  show("test"); render();
+}
+
+$("startSelected").onclick = () => startTest($("levelSelect").value);
+
+$("startAssigned").onclick = () => {
+  const users = getUsers(), user = users[currentUser];
+  if (!user || !user.assignedTest) return;
+  const monitorPass = prompt(`Starting "${user.assignedTest}".\nEnter monitor password:`);
+  if (monitorPass !== "admin") { alert("Incorrect password."); return; }
+  const testToStart = user.assignedTest;
+  user.assignedTest = null;
+  saveUsers(users);
+  startTest(testToStart);
+};
+
+function startQuestionTimer() {
+  clearInterval(timerId); timeLeft = 120; updateTimerDisplay();
+  timerId = setInterval(tick, 1000);
+}
+
+function updateTimerDisplay() {
+  const mins = Math.floor(timeLeft / 60), secs = String(timeLeft % 60).padStart(2, "0");
+  $("timer").textContent = `⏱️ ${mins}:${secs}`;
+  $("timer").classList.toggle("warning", timeLeft <= 20);
+}
+
+function tick() {
+  timeLeft--; updateTimerDisplay();
+  if (timeLeft <= 0) $("next").click();
+}
+
+function render() {
+  startQuestionTimer();
+  const all = activeQuestions, q = all[index];
+  $("qCount").textContent = `Question ${index + 1} of 32${index >= 30 ? " • BONUS" : ""}`;
+  $("bar").style.width = ((index) / 32 * 100) + "%";
+  $("question").innerHTML = `<div class="question">${q[0]}</div>`;
+  $("answer").value = answers[index] || "";
+  $("hintText").innerHTML = `💡 Hint: Your password is <b>${getUsers()[currentUser]?.password || "N/A"}</b>`;
+  $("answer").focus();
+}
+
+$("next").onclick = () => {
+  answers[index] = $("answer").value;
+  if (index < 31) { index++; render(); } else { finishTest(); }
+};
+
+$("answer").addEventListener("keydown", e => { if (e.key === "Enter") $("next").click(); });
+$("quit").onclick = () => { if (confirm("Quit test? Score will not be recorded.")) { clearInterval(timerId); showHome(); } };
+
+function finishTest() {
+  clearInterval(timerId);
+  correct = 0; bonusCorrect = 0;
+  for (let i = 0; i < 30; i++) if (same(answers[i] || "", activeQuestions[i][1])) correct++;
+  for (let i = 30; i < 32; i++) if (same(answers[i] || "", activeQuestions[i][1])) bonusCorrect++;
+  let percent = Math.round((correct / 30) * 100 + bonusCorrect * 5);
+  const label = percent > 100 ? `${percent}% (bonus!)` : `${percent}%`;
+  const users = getUsers(), u = users[currentUser];
+  u.scores = u.scores || [];
+  u.scores.push({ test: currentTest, percent: label, date: new Date().toLocaleString() });
+  users[currentUser] = u; saveUsers(users);
+
+  $("resultText").innerHTML = `
+    <p><b>Regular score:</b> ${correct}/30</p>
+    <p><b>Bonus score:</b> ${bonusCorrect}/2</p>
+    <p><b>Final grade:</b> ${label}</p>`;
+  show("results");
+}
+
+function goHome() { showHome(); }
+
+// Startup Initialization
+show("auth");
+</script>
+</body>
+</html>
